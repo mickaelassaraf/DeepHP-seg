@@ -1,0 +1,7 @@
+
+torch           # Version PyTorch, à adapter selon votre environnement (CUDA ou CPU)
+torchvision      # Pour les transformations et les datasets courants
+tqdm          # Pour les barres de progression
+wandb          # Pour le suivi des métriques et des expériences
+numpy         # Pour les calculs numériques
+scikit-learn      # Pour les métriques avancées comme confusion_matrix et classification_report
