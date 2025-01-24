@@ -8,3 +8,4 @@ scikit-learn      # Pour les métriques avancées comme confusion_matrix et clas
 transformers      # Pour les modèles de langage pré-entraînés
 accelerate>=0.26.0
 streamlit>=0.88.0
+matplotlib
