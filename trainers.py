@@ -7,6 +7,9 @@ from sklearn.metrics import confusion_matrix, classification_report
 from model import SimpleNN
 import os
 import numpy as np
+from transformers import ViTFeatureExtractor
+import torchvision.models as models
+
 
 def compute_metrics(labels, predictions, num_classes):
     """
@@ -29,14 +32,17 @@ def compute_metrics(labels, predictions, num_classes):
     }
     return metrics
 
-def train_model(train_loader, test_loader, config, model_str="SimpleNN"):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def train_model(train_loader, test_loader, config, model_str="mobilenet_v2"):
+    
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Training on {device}")
 
     # Initialisation du modèle
     if model_str == "SimpleNN":
         model = SimpleNN().to(device)
-    elif model_str == "VisionTransformer":
-        model = SimpleNN().to(device)
+    elif model_str == "mobilenet_v2":
+        model = models.mobilenet_v2(pretrained=True).to(device)
+
     else:
         raise ValueError(f"Modèle inconnu : {model_str}")
 
