@@ -24,12 +24,46 @@ def main():
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
+    elif config["model_type"] == "ResNet50":
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.Grayscale(num_output_channels=3),
+            transforms.ToTensor(),
+        ])
+    elif config["model_type"] == "ResNet18":
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
+    elif config["model_type"] == "SmallCNN":
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
     
-    train_dataset = datasets.ImageFolder(root=config["train_dir"], transform=transform)
-    test_dataset = datasets.ImageFolder(root=config["test_dir"], transform=transform)
-    
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=config["batch_size"], shuffle=False)
+    import random
+    from torch.utils.data import Subset
+
+    # Charger le dataset complet
+    dataset_train = datasets.ImageFolder(root=config["train_dir"], transform=transform)
+    dataset = datasets.ImageFolder(root = config["data_dir"], transform=transform)
+
+    # Nombre d'images à utiliser
+    total_images = 1000  # Exemple : 10,000 images seulement
+
+    # Sélectionner des indices aléatoires
+    selected_indices = random.sample(range(len(dataset)), total_images)
+
+    # Créer un sous-dataset
+    subset = Subset(dataset, selected_indices)
+
+    # Diviser le sous-dataset en entraînement et test
+
+    # DataLoaders
+
+    train_loader = DataLoader(dataset_train, batch_size=config["batch_size"], shuffle=True)
+    test_loader = DataLoader(subset, batch_size=config["batch_size"], shuffle=False)
+
 
     # Entraînement du modèle
     train_model(train_loader, test_loader, config)

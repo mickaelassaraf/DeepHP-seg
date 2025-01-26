@@ -4,51 +4,57 @@ from tqdm import tqdm
 import wandb
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix, classification_report
-from model import SimpleNN
+from model import SimpleNN, SmallCNN
 import os
 import numpy as np
 from transformers import ViTFeatureExtractor
 import torchvision.models as models
+from utils.metrics import compute_metrics
+from torch import nn
+
+def initialize_model(model_str, num_classes, device):
+    if model_str == "SimpleNN":
+        return SimpleNN().to(device)
+    elif model_str == "mobilenet_v2":
+        model = models.mobilenet_v2(pretrained=True).to(device)
+        model.load_state_dict(torch.load("models/mobilenet_v2.pth", map_location=device))
+        
+        return model.to(device)
+    elif model_str == "SmallCNN":
+        return SmallCNN(num_classes=num_classes).to(device)
+    elif model_str == "ResNet18":
+        model = models.resnet18(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+        for param in model.parameters():
+            param.requires_grad = False
+        for param in model.layer4.parameters():
+            param.requires_grad = True
+        for param in model.fc.parameters():
+            param.requires_grad = True
+        return model.to(device)
+    elif model_str == "ResNet50":
+        model = models.resnet50(pretrained=True)
+       
+        return model.to(device)
+    else:
+        raise ValueError(f"Unknown model: {model_str}")
 
 
-def compute_metrics(labels, predictions, num_classes):
-    """
-    Calculer les métriques détaillées : précision, rappel, F1-score.
-    """
-    conf_matrix = confusion_matrix(labels, predictions, labels=range(num_classes))
-    report = classification_report(labels, predictions, output_dict=True, zero_division=0)
-    
-    f1_scores = [report[str(i)]["f1-score"] for i in range(num_classes)]
-    precision_scores = [report[str(i)]["precision"] for i in range(num_classes)]
-    recall_scores = [report[str(i)]["recall"] for i in range(num_classes)]
-    
-    metrics = {
-        "confusion_matrix": conf_matrix,
-        "precision_scores": precision_scores,
-        "recall_scores": recall_scores,
-        "f1_scores": f1_scores,
-        "macro_f1": report["macro avg"]["f1-score"],
-        "weighted_f1": report["weighted avg"]["f1-score"],
-    }
-    return metrics
 
-def train_model(train_loader, test_loader, config, model_str="mobilenet_v2"):
+def train_model(train_loader, test_loader, config):
     
     device = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on {device}")
 
     # Initialisation du modèle
-    if model_str == "SimpleNN":
-        model = SimpleNN().to(device)
-    elif model_str == "mobilenet_v2":
-        model = models.mobilenet_v2(pretrained=True).to(device)
-
-    else:
-        raise ValueError(f"Modèle inconnu : {model_str}")
-
+    model = initialize_model(config["model_type"], config["num_classes"], device)
     # Configuration de l'entraînement
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+    optimizer = optim.Adam(
+    filter(lambda p: p.requires_grad, model.parameters()),
+    lr=config["learning_rate"]
+)
+
 
     # Initialisation de W&B
     wandb.init(project=config["project_name"], config=config)
@@ -153,7 +159,7 @@ def train_model(train_loader, test_loader, config, model_str="mobilenet_v2"):
     wandb.log({"best_test_accuracy": best_test_accuracy})
 
     # Sauvegarde du modèle
-    model_path = f"models/{model_str.lower()}.pth"
+    model_path = f"models/{config["model_type"].lower()}.pth"
     os.makedirs("models", exist_ok=True)
     torch.save(model.state_dict(), model_path)
     wandb.save(model_path)  # Sauvegarde du modèle dans W&B
