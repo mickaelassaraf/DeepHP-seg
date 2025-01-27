@@ -6,6 +6,7 @@ wandb          # Pour le suivi des métriques et des expériences
 numpy         # Pour les calculs numériques
 scikit-learn      # Pour les métriques avancées comme confusion_matrix et classification_report
 transformers      # Pour les modèles de langage pré-entraînés
+grad-cam
 accelerate>=0.26.0
 streamlit>=0.88.0
 matplotlib
