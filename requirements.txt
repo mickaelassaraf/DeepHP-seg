@@ -10,7 +10,6 @@ grad-cam
 accelerate>=0.26.0
 streamlit>=0.88.0
 matplotlib
-cv2
 Pillow
 opencv-python-headless
 pytorch-grad-cam
