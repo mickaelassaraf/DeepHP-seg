@@ -32,7 +32,7 @@ def initialize_model(model_path, device="cuda"):
     """Load and return the pre-trained model and target layers."""
     model = models.resnet18()
     model.fc = nn.Linear(model.fc.in_features, 2)
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
     target_layers = [model.layer4[-1]]
