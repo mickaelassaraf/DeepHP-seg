@@ -4,5 +4,4 @@ data/*
 wandb/*
 env/*
 __pycache__/*
-models/*
 *.pyc
